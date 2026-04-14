@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Pharma POS & Inventory V4 - Premium</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #0ea5e9;       /* Vibrant Blue */
+            --primary-hover: #0284c7;
+            --primary-light: #e0f2fe;
+            --success: #10b981;       /* Clean Green */
+            --danger: #ef4444;        
+            --bg: #f1f5f9;            /* Soft Light Blue-Gray */
+            --surface: #ffffff;       
+            --text-main: #0f172a;     /* Deep Slate */
+            --text-muted: #64748b;    
+            --border: #e2e8f0;        
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
+            --radius: 16px;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--text-main); 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+        .brand { font-size: 1.6rem; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        .clock { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; background: var(--bg); padding: 6px 14px; border-radius: 50px;}
+
+        /* Main Layout */
+        .app-container {
+            display: flex;
+            flex: 1;
+            padding: 25px;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Left Column: POS Search */
+        .pos-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Search Bar & Popout */
+        .search-wrapper { position: relative; z-index: 50; }
+        .main-search-input {
+            width: 100%;
+            padding: 20px 25px 20px 55px;
+            font-size: 1.15rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text-main);
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+        .main-search-input:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 5px var(--primary-light), var(--shadow-md); 
+        }
+        .search-icon {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--text-muted);
+        }
+
+        .search-popout {
+            position: absolute; top: calc(100% + 12px); left: 0; right: 0;
+            background: var(--surface); border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); max-height: 550px; overflow-y: auto;
+            display: none; border: 1px solid var(--border); animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .search-popout.active { display: block; }
+        
+        .result-item {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s; position: relative; cursor: pointer;
+        }
+        .result-item:hover { background: var(--bg); padding-left: 25px; }
+        .result-item:last-child { border-bottom: none; }
+        
+        .item-info { display: flex; flex-direction: column; gap: 4px; pointer-events: none;}
+        .item-title { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
+        .item-sub { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .badge { background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
+
+        /* 🌟 THE HOVER TOOLTIP (Information Pop-out) 🌟 */
+        .info-tooltip {
+            position: absolute;
+            left: calc(100% + 15px); /* Positioned to the right of the search list */
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            width: 320px;
+            background: var(--text-main); /* Dark themed tooltip for contrast */
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        /* Arrow pointer for the tooltip */
+        .info-tooltip::before {
+            content: ''; position: absolute; left: -6px; top: calc(50% - 6px);
+            width: 12px; height: 12px; background: var(--text-main);
+            transform: rotate(45deg);
+        }
+
+        .result-item:hover .info-tooltip {
+            opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0);
+        }
+
+        .tt-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; color: #fff;}
+        .tt-dosage { color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; }
+        .tt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 10px;}
+        .tt-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .tt-value { font-weight: 600; color: #fff; }
+
+        /* Right Column: Cart */
+        .cart-section {
+            flex: 1; min-width: 400px; background: var(--surface);
+            border-radius: var(--radius); box-shadow: var(--shadow-md);
+            display: flex; flex-direction: column; border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .cart-header { padding: 20px 25px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 1.2rem; background: #f8fafc; display: flex; align-items: center; gap: 10px;}
+        .cart-items { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        .cart-item {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 16px; border-radius: 12px; margin-bottom: 12px;
+            position: relative; transition: 0.2s; box-shadow: var(--shadow-sm);
+        }
+        .cart-item:hover { border-color: var(--primary); }
+        
+        .discount-box { padding: 15px 20px; background: var(--bg); margin: 0 20px; border-radius: 12px; border: 1px dashed #cbd5e1; }
+        .calc-footer { padding: 20px 25px; border-top: 1px solid var(--border); background: var(--surface); }
+        .total-text { font-size: 2.5rem; font-weight: 800; color: var(--primary); text-align: right; margin: 10px 0; letter-spacing: -1px;}
+        
+        /* Buttons & Inputs */
+        .btn {
+            padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
+            font-weight: 600; font-size: 0.95rem; font-family: inherit;
+            transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4); }
+        .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg); border-color: #cbd5e1;}
+        .btn-danger { background: #fef2f2; color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        
+        select, input[type="number"], input[type="file"] {
+            padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;
+        }
+        select:focus, input[type="number"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal { background: var(--surface); padding: 35px; border-radius: 20px; width: 400px; box-shadow: var(--shadow-lg); animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Full Inventory Modal */
+        .inventory-modal { width: 95%; max-width: 1400px; height: 85vh; display: flex; flex-direction: column; padding: 0;}
+        .inventory-modal .modal-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .table-wrap { flex: 1; overflow: auto; padding: 0 25px 25px 25px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.95rem; }
+        th { background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); padding: 16px; text-align: left; position: sticky; top: 0; color: var(--text-muted); font-weight: 700; border-bottom: 2px solid var(--border); z-index: 10;}
+        td { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 500;}
+        tr:hover td { background: var(--bg); }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 14px 28px; border-radius: 50px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; }
+        .toast.show { opacity: 1; bottom: 50px; }
+
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px;}
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body onclick="closeSearchPopout(event)">
+
+<div id="toast" class="toast">✔️ Added to Cart successfully</div>
+
+<div class="modal-overlay" id="priceModal">
+    <div class="modal">
+        <h3 style="margin:0 0 15px 0; color: var(--text-main); font-size: 1.4rem;">Confirm Item</h3>
+        <div id="modalSub" style="font-size: 1rem; color: var(--text-main); margin-bottom: 25px; line-height: 1.6; background: var(--bg); padding: 18px; border-radius: 12px; border: 1px solid var(--border);"></div>
+        
+        <div style="margin-bottom: 25px;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Quantity:</label>
+            <input type="number" id="modalQty" value="1" min="1" style="font-size: 1.5rem; text-align: center; margin-top: 8px; font-weight: 800; padding: 15px;">
+        </div>
+
+        <div style="display: grid; gap: 12px;">
+            <button class="btn btn-primary" style="padding: 14px; font-size: 1.05rem;" onclick="confirmAdd('srp')">Standard (SRP) Price</button>
+            <button class="btn btn-outline" style="padding: 14px; color: var(--success); border-color: var(--success); font-size: 1.05rem;" onclick="confirmAdd('gov')">Discounted (Gov) Price</button>
+            <button class="btn btn-outline" style="padding: 14px;" onclick="closeModal('priceModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="inventoryModal">
+    <div class="modal inventory-modal">
+        <div class="modal-header">
+            <h2 style="margin:0; color: var(--primary);">📦 Full Inventory Database</h2>
+            <button class="btn btn-outline" onclick="closeModal('inventoryModal')">✕ Close Database</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Generic Name</th>
+                        <th>Brand Name</th>
+                        <th>Dosage</th>
+                        <th>SRP</th>
+                        <th>Gov Price</th>
+                        <th>Principal</th>
+                    </tr>
+                </thead>
+                <tbody id="fullInventoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="navbar">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <h1 class="brand">💊 ProPharma <span style="color:var(--text-muted); font-size: 0.9rem; font-weight: 500;">Premium</span></h1>
+        <span class="clock" id="currentDateTime"></span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-outline" onclick="openInventoryModal()">📋 View Inventory</button>
+        <label for="excelFile" class="btn btn-primary" style="cursor: pointer; margin:0;">
+            📂 Import Data
+        </label>
+        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+        <button class="btn btn-danger" onclick="resetSystem()">Reset System</button>
+    </div>
+</div>
+
+<div class="app-container">
+    
+    <div class="pos-section">
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="mainSearch" class="main-search-input" placeholder="Search Generic, Brand, Dosage, or Principal..." oninput="handleSearch(this.value)" autocomplete="off">
+            
+            <div class="search-popout" id="searchPopout">
+                <div style="padding: 30px; text-align: center; color: var(--text-muted); font-weight: 500;" id="emptySearch">
+                    Start typing to search the inventory...
+                </div>
+                <div id="searchResults"></div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 60px; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3; filter: grayscale(100%);">🛒</div>
+            <h2 style="margin: 0 0 10px 0; color: var(--text-main);">System Ready</h2>
+            <p style="font-size: 1.1rem;">Search for items above to add them to the current order.<br><strong>Pro Tip:</strong> Hover over an item in the search results to see full details!</p>
+        </div>
+    </div>
+
+    <div class="cart-section">
+        <div class="cart-header">
+            🛒 Current Order
+        </div>
+
+        <div class="cart-items" id="cartContainer">
+            </div>
+
+        <div class="discount-box">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">APPLY DISCOUNT</label>
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <select id="discountType" onchange="updateCart()" style="flex:1;">
+                    <option value="none">No Discount</option>
+                    <option value="percent">Percentage (%)</option>
+                    <option value="flat">Flat Amount (₱)</option>
+                </select>
+                <input type="number" id="discountValue" value="0" oninput="updateCart()" style="flex:1;" placeholder="Enter value">
+            </div>
+        </div>
+
+        <div class="calc-footer">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--text-muted); font-weight: 600;">
+                <span>Subtotal</span>
+                <span id="subtotalText">₱0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: var(--danger); font-weight: 600;">
+                <span>Discount</span>
+                <span id="discountText">-₱0.00</span>
+            </div>
+            <div class="total-text" id="grandTotalText">₱0.00</div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn btn-outline" style="flex: 1; padding: 16px;" onclick="clearCart()">Clear Order</button>
+                <button class="btn btn-primary" style="flex: 2; padding: 16px; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);" onclick="printReceipt()">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Time updates
+    function updateDateTime() {
+        const now = new Date();
+        const options = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('currentDateTime').textContent = now.toLocaleString(undefined, options);
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    /* ================= SYSTEM LOGIC ================= */
+    let db = JSON.parse(localStorage.getItem('pharma_v6_db')) || [];
+    let cart = [];
+    let pendingItem = null;
+
+    function toNum(val) {
+        if (!val) return 0;
+        let cleaned = String(val).replace(/[^\d.-]/g, '');
+        return parseFloat(cleaned) || 0;
+    }
+
+    // Handle the "Pop out" Search
+    function handleSearch(query) {
+        const popout = document.getElementById('searchPopout');
+        const resultsContainer = document.getElementById('searchResults');
+        const emptyState = document.getElementById('emptySearch');
+        
+        if (!query.trim()) {
+            popout.classList.remove('active');
+            return;
+        }
+
+        popout.classList.add('active');
+        emptyState.style.display = 'none';
+        
+        const q = query.toLowerCase();
+        
+        // FIXED BUG: Now includes i.principal in the search filter!
+        const filtered = db.filter(i =>
+            String(i.generic).toLowerCase().includes(q) ||
+            String(i.brand).toLowerCase().includes(q) ||
+            String(i.dosage).toLowerCase().includes(q) ||
+            String(i.principal).toLowerCase().includes(q)
+        ).slice(0, 50); // Increased to 50 so more principal results fit
+
+        resultsContainer.innerHTML = '';
+
+        if (filtered.length === 0) {
+            emptyState.style.display = 'block';
+            emptyState.innerHTML = '<strong>No matching items found.</strong><br><span style="font-size:0.9rem; margin-top:5px; display:block;">Try searching for a different generic, brand, or principal.</span>';
+        } else {
+            filtered.forEach(item => {
+                const actualIndex = db.indexOf(item);
+                const srpPrice = toNum(item.srp).toLocaleString();
+                const govPrice = toNum(item.gov).toLocaleString();
+                
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-title">${item.generic} <span class="badge">${item.dosage || 'N/A'}</span></div>
+                        <div class="item-sub">Brand: ${item.brand || 'Generic'} &nbsp;•&nbsp; SRP: ₱${srpPrice}</div>
+                    </div>
+                    
+                    <div class="info-tooltip">
+                        <div class="tt-title">${item.generic}</div>
+                        <div class="tt-dosage">${item.dosage || 'No Dosage Specified'}</div>
+                        
+                        <div class="tt-grid">
+                            <div>
+                                <div class="tt-label">Brand Name</div>
+                                <div class="tt-value">${item.brand || 'Generic'}</div>
+                            </div>
+                            <div>
+                                <div class="tt-label">Principal / Supplier</div>
+                                <div class="tt-value" style="color: #60a5fa;">${item.principal || 'Unspecified'}</div>
+                            </div>
+                            <div>
+                                <div class="tt-label">Standard SRP</div>
+                                <div class="tt-value" style="font-size: 1.1rem;">₱${srpPrice}</div>
+                            </div>
+                            <div>
+                                <div class="tt-label">Gov / Discounted</div>
+                                <div class="tt-value" style="font-size: 1.1rem; color: #34d399;">₱${govPrice}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="padding: 8px 18px;" onclick="openSelection(${actualIndex})">+ Add</button>
+                `;
+                resultsContainer.appendChild(div);
+            });
+        }
+    }
+
+    // Close popout if clicked outside
+    function closeSearchPopout(e) {
+        if (!e.target.closest('.search-wrapper') && !e.target.closest('.result-item')) {
+            document.getElementById('searchPopout').classList.remove('active');
+        }
+    }
+
+    // Update Cart Panel
+    function updateCart() {
+        const container = document.getElementById('cartContainer');
+        const dType = document.getElementById('discountType').value;
+        const dVal = parseFloat(document.getElementById('discountValue').value) || 0;
+        
+        container.innerHTML = '';
+        let subtotal = 0;
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; margin-top: 60px; color: var(--text-muted);">
+                    <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;">🧾</div>
+                    <div style="font-weight: 500;">Your cart is empty</div>
+                </div>`;
+        }
+
+        cart.forEach((item, i) => {
+            const total = item.price * item.qty;
+            subtotal += total;
+            
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: ${item.type==='SRP'?'var(--primary)':'var(--success)'}; font-weight:800; letter-spacing: 0.5px;">${item.type} PRICE</div>
+                        <div style="font-weight:700; font-size:1.05rem; margin:4px 0;">${item.name}</div>
+                        <div style="font-size:0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+                            ${item.brand || 'Generic'} • ${item.dosage}
+                        </div>
+                        <div style="font-size:0.9rem; font-weight: 600;">${item.qty} pcs × ₱${item.price.toLocaleString()}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:800; color:var(--primary); font-size: 1.2rem;">₱${total.toLocaleString()}</div>
+                        <button class="btn" style="background:none; border:none; color: var(--danger); font-size:0.8rem; padding: 5px 0; font-weight: 600; text-decoration:underline; margin-top: 5px;" onclick="removeFromCart(${i})">Remove</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        let discountAmt = 0;
+        if (dType === 'percent') discountAmt = subtotal * (dVal / 100);
+        else if (dType === 'flat') discountAmt = dVal;
+
+        const grandTotal = Math.max(0, subtotal - discountAmt);
+
+        document.getElementById('subtotalText').innerText = '₱' + subtotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('discountText').innerText = '-₱' + discountAmt.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('grandTotalText').innerText = '₱' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    /* ================= ACTIONS ================= */
+
+    function openSelection(index) {
+        const item = db[index];
+        pendingItem = item;
+        
+        document.getElementById('searchPopout').classList.remove('active'); 
+        document.getElementById('mainSearch').value = ''; 
+
+        const detailText = `<strong style="font-size: 1.2rem; color: var(--primary);">${item.generic}</strong><br>
+                            <span style="font-weight: 600; margin-top: 5px; display: inline-block;">Dosage:</span> ${item.dosage || 'N/A'}<br>
+                            <span style="font-weight: 600;">Brand:</span> ${item.brand || 'None'}<br>
+                            <span style="font-weight: 600;">Principal:</span> ${item.principal || 'N/A'}`;
+        document.getElementById('modalSub').innerHTML = detailText;
+        document.getElementById('modalQty').value = 1; 
+        
+        document.getElementById('priceModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('modalQty').focus(), 100);
+    }
+
+    function confirmAdd(type) {
+        const qty = parseInt(document.getElementById('modalQty').value) || 1;
+        if(qty < 1) return alert("Invalid quantity");
+
+        const price = type === 'srp' ? toNum(pendingItem.srp) : toNum(pendingItem.gov);
+        
+        const existing = cart.find(c => c.name === pendingItem.generic && c.brand === pendingItem.brand && c.dosage === pendingItem.dosage && c.type === type.toUpperCase());
+        
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            cart.push({
+                name: pendingItem.generic,
+                brand: pendingItem.brand,
+                dosage: pendingItem.dosage || '',
+                price: price,
+                qty: qty,
+                type: type.toUpperCase()
+            });
+        }
+        
+        closeModal('priceModal');
+        updateCart();
+        showToast();
+    }
+
+    function closeModal(id) { 
+        document.getElementById(id).style.display = 'none'; 
+        if(id === 'priceModal') pendingItem = null; 
+    }
+
+    function removeFromCart(i) { 
+        cart.splice(i, 1); 
+        updateCart(); 
+    }
+    
+    function clearCart() {
+        if(confirm("Clear current order?")) {
+            cart = [];
+            updateCart();
+        }
+    }
+
+    function showToast() {
+        const t = document.getElementById('toast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function printReceipt() {
+        if(cart.length === 0) return alert("Cart is empty!");
+        window.print();
+    }
+
+    /* ================= INVENTORY MODAL ================= */
+    function openInventoryModal() {
+        const tbody = document.getElementById('fullInventoryBody');
+        tbody.innerHTML = '';
+        
+        if(db.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">No data found. Please import an Excel file.</td></tr>';
+        } else {
+            // Render first 500
+            db.slice(0, 500).forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:700; color: var(--primary);">${item.generic}</td>
+                    <td>${item.brand || '-'}</td>
+                    <td><span class="badge">${item.dosage || '-'}</span></td>
+                    <td style="font-weight: 600;">₱${toNum(item.srp).toLocaleString()}</td>
+                    <td style="font-weight: 600; color: var(--success);">₱${toNum(item.gov).toLocaleString()}</td>
+                    <td style="font-size: 0.9rem;">${item.principal || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        document.getElementById('inventoryModal').style.display = 'flex';
+    }
+
+    /* ================= EXCEL IMPORT ================= */
+    function findCol(row, keywords) {
+        const keys = Object.keys(row);
+        for (let key of keys) {
+            const up = key.toUpperCase().replace(/\s+/g, '').trim();
+            for (let k of keywords) {
+                const cmp = k.toUpperCase().replace(/\s+/g, '').trim();
+                if (up === cmp || up.includes(cmp) || cmp.includes(up)) return row[key];
+            }
+        }
+        return '';
+    }
+
+    document.getElementById('excelFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                
+                db = rows.map(r => ({
+                    generic: findCol(r, ['GENERIC', 'GENERIC NAME', 'NAME']),
+                    brand: findCol(r, ['BRAND', 'BRAND NAME']),
+                    dosage: findCol(r, ['DOSAGE', 'STRENGTH', 'DOSE', 'CONTENT']),
+                    srp: findCol(r, ['SRP', 'RETAIL', 'PRICE']),
+                    gov: findCol(r, ['GOVERNMENT', 'GOV', 'GOV PRICE', 'DISCOUNTED']),
+                    principal: findCol(r, ['PRINCIPAL', 'SUPPLIER', 'COMPANY'])
+                }));
+                localStorage.setItem('pharma_v6_db', JSON.stringify(db));
+                alert(`Imported ${db.length} items successfully!`);
+            } catch (err) {
+                alert("Error reading file. Please ensure it's a valid Excel document.");
+                console.error(err);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function resetSystem() { 
+        if(confirm("Are you sure you want to delete all database items? This cannot be undone.")) { 
+            db = []; 
+            cart = []; 
+            localStorage.removeItem('pharma_v6_db'); 
+            updateCart(); 
+            alert("Database cleared.");
+        } 
+    }
+
+    // Initial Load
+    updateCart();
+
+</script>
+</body>
+</html>
