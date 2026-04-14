@@ -377,13 +377,13 @@
         
         const q = query.toLowerCase();
         
-        // FIXED BUG: Now includes i.principal in the search filter!
+        // Includes generic, brand, dosage, and principal in the search filter
         const filtered = db.filter(i =>
             String(i.generic).toLowerCase().includes(q) ||
             String(i.brand).toLowerCase().includes(q) ||
             String(i.dosage).toLowerCase().includes(q) ||
             String(i.principal).toLowerCase().includes(q)
-        ).slice(0, 50); // Increased to 50 so more principal results fit
+        ).slice(0, 50);
 
         resultsContainer.innerHTML = '';
 
@@ -401,7 +401,11 @@
                 div.innerHTML = `
                     <div class="item-info">
                         <div class="item-title">${item.generic} <span class="badge">${item.dosage || 'N/A'}</span></div>
-                        <div class="item-sub">Brand: ${item.brand || 'Generic'} &nbsp;•&nbsp; SRP: ₱${srpPrice}</div>
+                        <div class="item-sub">
+                            Brand: ${item.brand || 'Generic'} &nbsp;•&nbsp; 
+                            SRP: ₱${srpPrice} &nbsp;•&nbsp; 
+                            <span style="color: var(--success); font-weight: 700;">Gov: ₱${govPrice}</span>
+                        </div>
                     </div>
                     
                     <div class="info-tooltip">
