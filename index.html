@@ -31,9 +31,39 @@
             color: var(--text-main); 
             margin: 0; 
             height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
             overflow: hidden;
+        }
+
+        /* 🌟 LANDING SCREEN 🌟 */
+        .landing-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; color: white; transition: 0.3s ease;
+        }
+        .landing-content { text-align: center; max-width: 900px; padding: 20px; }
+        .landing-title { font-size: 3rem; font-weight: 800; margin-bottom: 10px; color: #fff; letter-spacing: -1px; }
+        .landing-subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 50px; }
+        
+        .mode-cards { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+        .mode-card {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+            padding: 50px 40px; width: 340px; text-align: center; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.1); transform: translateY(-10px);
+            border-color: var(--primary); box-shadow: 0 20px 40px rgba(14, 165, 233, 0.2);
+        }
+        .mode-card .icon { font-size: 4.5rem; margin-bottom: 25px; display: block; }
+        .mode-card h3 { font-size: 1.6rem; margin: 0 0 15px 0; font-weight: 700; }
+        .mode-card p { font-size: 1.05rem; color: #cbd5e1; line-height: 1.6; margin: 0; }
+
+        /* Main Wrapper */
+        #mainApp {
+            display: none; /* Hidden by default until mode is selected */
+            flex-direction: column; height: 100vh; width: 100%;
         }
 
         /* Navbar */
@@ -49,6 +79,7 @@
             z-index: 10;
         }
         .brand { font-size: 1.6rem; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        .mode-badge { font-size: 0.8rem; background: var(--text-main); color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; text-transform: uppercase;}
         .clock { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; background: var(--bg); padding: 6px 14px; border-radius: 50px;}
 
         .file-status {
@@ -60,61 +91,36 @@
 
         /* Main Layout */
         .app-container {
-            display: flex;
-            flex: 1;
-            padding: 25px;
-            gap: 25px;
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-            overflow: hidden;
+            display: flex; flex: 1; padding: 25px; gap: 25px;
+            max-width: 1600px; margin: 0 auto; width: 100%;
+            box-sizing: border-box; overflow: hidden; transition: 0.3s;
         }
 
         /* Left Column: POS Search */
-        .pos-section {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        .pos-section { flex: 2; display: flex; flex-direction: column; position: relative; transition: 0.3s; }
 
         /* Search Bar & Popout */
         .search-wrapper { position: relative; z-index: 50; }
         .main-search-input {
-            width: 100%;
-            padding: 20px 25px 20px 55px;
-            font-size: 1.15rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            border: 2px solid transparent;
-            border-radius: var(--radius);
-            background: var(--surface);
-            color: var(--text-main);
-            outline: none;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            box-shadow: var(--shadow-md);
+            width: 100%; padding: 20px 25px 20px 55px; font-size: 1.15rem;
+            font-family: 'Plus Jakarta Sans', sans-serif; border: 2px solid transparent;
+            border-radius: var(--radius); background: var(--surface); color: var(--text-main);
+            outline: none; box-sizing: border-box; transition: all 0.3s ease; box-shadow: var(--shadow-md);
         }
-        .main-search-input:focus { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 5px var(--primary-light), var(--shadow-md); 
-        }
-        .search-icon {
-            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--text-muted);
-        }
+        .main-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-light), var(--shadow-md); }
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--text-muted); }
 
         .search-popout {
             position: absolute; top: calc(100% + 12px); left: 0; right: 0;
-            background: var(--surface); border-radius: var(--radius);
-            box-shadow: var(--shadow-lg); max-height: 550px; overflow-y: auto;
-            display: none; border: 1px solid var(--border); animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+            max-height: 550px; overflow-y: auto; display: none; border: 1px solid var(--border);
+            animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .search-popout.active { display: block; }
         
         .result-item {
-            padding: 16px 20px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-            transition: 0.2s; position: relative; cursor: pointer;
+            padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex;
+            justify-content: space-between; align-items: center; transition: 0.2s; position: relative; cursor: pointer;
         }
         .result-item:hover { background: var(--bg); padding-left: 25px; }
         .result-item:last-child { border-bottom: none; }
@@ -124,35 +130,17 @@
         .item-sub { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
         .badge { background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
 
-        /* 🌟 THE HOVER TOOLTIP (Information Pop-out) 🌟 */
+        /* THE HOVER TOOLTIP */
         .info-tooltip {
-            position: absolute;
-            left: calc(100% + 15px); /* Positioned to the right of the search list */
-            top: 50%;
-            transform: translateY(-50%) translateX(-10px);
-            width: 320px;
-            background: var(--text-main); /* Dark themed tooltip for contrast */
-            color: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow-lg);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            z-index: 1000;
-            pointer-events: none;
+            position: absolute; left: calc(100% + 15px); top: 50%; transform: translateY(-50%) translateX(-10px);
+            width: 320px; background: var(--text-main); color: white; border-radius: 12px; padding: 20px;
+            box-shadow: var(--shadow-lg); opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 1000; pointer-events: none;
         }
-        
-        /* Arrow pointer for the tooltip */
         .info-tooltip::before {
             content: ''; position: absolute; left: -6px; top: calc(50% - 6px);
-            width: 12px; height: 12px; background: var(--text-main);
-            transform: rotate(45deg);
+            width: 12px; height: 12px; background: var(--text-main); transform: rotate(45deg);
         }
-
-        .result-item:hover .info-tooltip {
-            opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0);
-        }
+        .result-item:hover .info-tooltip { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0); }
 
         .tt-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; color: #fff;}
         .tt-dosage { color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; }
@@ -162,19 +150,17 @@
 
         /* Right Column: Cart */
         .cart-section {
-            flex: 1; min-width: 400px; background: var(--surface);
-            border-radius: var(--radius); box-shadow: var(--shadow-md);
-            display: flex; flex-direction: column; border: 1px solid var(--border);
-            overflow: hidden;
+            flex: 1; min-width: 400px; background: var(--surface); border-radius: var(--radius);
+            box-shadow: var(--shadow-md); display: flex; flex-direction: column; border: 1px solid var(--border);
+            overflow: hidden; transition: 0.3s;
         }
 
         .cart-header { padding: 20px 25px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 1.2rem; background: #f8fafc; display: flex; align-items: center; gap: 10px;}
         .cart-items { flex: 1; overflow-y: auto; padding: 20px; }
         
         .cart-item {
-            background: var(--surface); border: 1px solid var(--border);
-            padding: 16px; border-radius: 12px; margin-bottom: 12px;
-            position: relative; transition: 0.2s; box-shadow: var(--shadow-sm);
+            background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px;
+            margin-bottom: 12px; position: relative; transition: 0.2s; box-shadow: var(--shadow-sm);
         }
         .cart-item:hover { border-color: var(--primary); }
         
@@ -184,9 +170,8 @@
         
         /* Buttons & Inputs */
         .btn {
-            padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
-            font-weight: 600; font-size: 0.95rem; font-family: inherit;
-            transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem;
+            font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
         .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4); }
@@ -226,6 +211,31 @@
 </head>
 <body onclick="closeSearchPopout(event)">
 
+<!-- 🌟 LANDING SCREEN 🌟 -->
+<div id="landingScreen" class="landing-screen">
+    <div class="landing-content">
+        <h1 class="landing-title">💊 ProPharma Premium</h1>
+        <p class="landing-subtitle">Select your operating mode to proceed</p>
+        
+        <div class="mode-cards">
+            <!-- Price View Mode -->
+            <div class="mode-card" onclick="selectMode('view')">
+                <span class="icon">👁️</span>
+                <h3>Price View Mode</h3>
+                <p>Search the inventory and check pricing securely without opening a transaction or cart.</p>
+            </div>
+            
+            <!-- Transaction Mode -->
+            <div class="mode-card" onclick="selectMode('transaction')">
+                <span class="icon">🛒</span>
+                <h3>Transaction Mode</h3>
+                <p>Full Point of Sale system. Create orders, apply discounts, and print receipts.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST & MODALS -->
 <div id="toast" class="toast">✔️ Added to Cart successfully</div>
 
 <div class="modal-overlay" id="priceModal">
@@ -270,83 +280,88 @@
     </div>
 </div>
 
-<div class="navbar">
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <h1 class="brand">💊 ProPharma <span style="color:var(--text-muted); font-size: 0.9rem; font-weight: 500;">Premium</span></h1>
-        <span class="clock" id="currentDateTime"></span>
-    </div>
-    <div style="display: flex; gap: 12px; align-items: center;">
-        <div id="fileStatus" class="file-status" title="No database loaded">📄 No file loaded</div>
-        
-        <button class="btn btn-outline" onclick="openInventoryModal()">📋 View Inventory</button>
-        <label for="excelFile" class="btn btn-primary" style="cursor: pointer; margin:0;">
-            📂 Import Data
-        </label>
-        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
-        <button class="btn btn-danger" onclick="resetSystem()">Reset System</button>
-    </div>
-</div>
-
-<div class="app-container">
-    
-    <div class="pos-section">
-        <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="mainSearch" class="main-search-input" placeholder="Search Generic, Brand, Dosage, or Principal..." oninput="handleSearch(this.value)" autocomplete="off">
+<!-- 🌟 MAIN APPLICATION SYSTEM 🌟 -->
+<div id="mainApp">
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <h1 class="brand">💊 ProPharma</h1>
+            <span id="navModeBadge" class="mode-badge">Transaction Mode</span>
+            <span class="clock" id="currentDateTime"></span>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div id="fileStatus" class="file-status" title="No database loaded">📄 No file loaded</div>
             
-            <div class="search-popout" id="searchPopout">
-                <div style="padding: 30px; text-align: center; color: var(--text-muted); font-weight: 500;" id="emptySearch">
-                    Start typing to search the inventory...
+            <button class="btn btn-outline" onclick="switchMode()" style="background: #f8fafc; border-color: #cbd5e1;">🔄 Switch Mode</button>
+            <button class="btn btn-outline" onclick="openInventoryModal()">📋 View Inventory</button>
+            <label for="excelFile" class="btn btn-primary" style="cursor: pointer; margin:0;">
+                📂 Import Data
+            </label>
+            <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+            <button class="btn btn-danger" onclick="resetSystem()">Reset System</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <div class="pos-section" id="posSection">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="mainSearch" class="main-search-input" placeholder="Search Generic, Brand, Dosage, or Principal..." oninput="handleSearch(this.value)" autocomplete="off">
+                
+                <div class="search-popout" id="searchPopout">
+                    <div style="padding: 30px; text-align: center; color: var(--text-muted); font-weight: 500;" id="emptySearch">
+                        Start typing to search the inventory...
+                    </div>
+                    <div id="searchResults"></div>
                 </div>
-                <div id="searchResults"></div>
             </div>
-        </div>
-        
-        <div style="margin-top: 60px; text-align: center; color: var(--text-muted);">
-            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3; filter: grayscale(100%);">🛒</div>
-            <h2 style="margin: 0 0 10px 0; color: var(--text-main);">System Ready</h2>
-            <p style="font-size: 1.1rem;">Search for items above to add them to the current order.<br><strong>Pro Tip:</strong> Hover over an item in the search results to see full details!</p>
-        </div>
-    </div>
-
-    <div class="cart-section">
-        <div class="cart-header">
-            🛒 Current Order
-        </div>
-
-        <div class="cart-items" id="cartContainer">
-            </div>
-
-        <div class="discount-box">
-            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">APPLY DISCOUNT</label>
-            <div style="display: flex; gap: 12px; margin-top: 8px;">
-                <select id="discountType" onchange="updateCart()" style="flex:1;">
-                    <option value="none">No Discount</option>
-                    <option value="percent">Percentage (%)</option>
-                    <option value="flat">Flat Amount (₱)</option>
-                </select>
-                <input type="number" id="discountValue" value="0" oninput="updateCart()" style="flex:1;" placeholder="Enter value">
-            </div>
-        </div>
-
-        <div class="calc-footer">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--text-muted); font-weight: 600;">
-                <span>Subtotal</span>
-                <span id="subtotalText">₱0.00</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; color: var(--danger); font-weight: 600;">
-                <span>Discount</span>
-                <span id="discountText">-₱0.00</span>
-            </div>
-            <div class="total-text" id="grandTotalText">₱0.00</div>
             
-            <div style="display: flex; gap: 12px; margin-top: 20px;">
-                <button class="btn btn-outline" style="flex: 1; padding: 16px;" onclick="clearCart()">Clear Order</button>
-                <button class="btn btn-primary" style="flex: 2; padding: 16px; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);" onclick="printReceipt()">Print Receipt</button>
+            <div style="margin-top: 60px; text-align: center; color: var(--text-muted);">
+                <div id="posIcon" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3; filter: grayscale(100%);">🛒</div>
+                <h2 id="posTitle" style="margin: 0 0 10px 0; color: var(--text-main);">System Ready</h2>
+                <p id="posDesc" style="font-size: 1.1rem;">Search for items above to add them to the current order.<br><strong>Pro Tip:</strong> Hover over an item in the search results to see full details!</p>
             </div>
         </div>
-    </div>
 
+        <div class="cart-section" id="cartSection">
+            <div class="cart-header">
+                🛒 Current Order
+            </div>
+
+            <div class="cart-items" id="cartContainer">
+                </div>
+
+            <div class="discount-box">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">APPLY DISCOUNT</label>
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <select id="discountType" onchange="updateCart()" style="flex:1;">
+                        <option value="none">No Discount</option>
+                        <option value="percent">Percentage (%)</option>
+                        <option value="flat">Flat Amount (₱)</option>
+                    </select>
+                    <input type="number" id="discountValue" value="0" oninput="updateCart()" style="flex:1;" placeholder="Enter value">
+                </div>
+            </div>
+
+            <div class="calc-footer">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--text-muted); font-weight: 600;">
+                    <span>Subtotal</span>
+                    <span id="subtotalText">₱0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--danger); font-weight: 600;">
+                    <span>Discount</span>
+                    <span id="discountText">-₱0.00</span>
+                </div>
+                <div class="total-text" id="grandTotalText">₱0.00</div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button class="btn btn-outline" style="flex: 1; padding: 16px;" onclick="clearCart()">Clear Order</button>
+                    <button class="btn btn-primary" style="flex: 2; padding: 16px; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);" onclick="printReceipt()">Print Receipt</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script>
@@ -359,10 +374,50 @@
     setInterval(updateDateTime, 1000);
     updateDateTime();
 
-    /* ================= SYSTEM LOGIC ================= */
+    /* ================= SYSTEM LOGIC & MODES ================= */
     let db = JSON.parse(localStorage.getItem('pharma_v6_db')) || [];
     let cart = [];
     let pendingItem = null;
+    let currentMode = ''; // 'view' or 'transaction'
+
+    // LANDING PAGE SELECTION
+    function selectMode(mode) {
+        currentMode = mode;
+        document.getElementById('landingScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+
+        const cartSection = document.getElementById('cartSection');
+        const posIcon = document.getElementById('posIcon');
+        const posTitle = document.getElementById('posTitle');
+        const posDesc = document.getElementById('posDesc');
+        const navModeBadge = document.getElementById('navModeBadge');
+
+        // Clear Search text to reset state
+        document.getElementById('mainSearch').value = '';
+        document.getElementById('searchPopout').classList.remove('active');
+
+        if (mode === 'view') {
+            cartSection.style.display = 'none';
+            navModeBadge.innerText = '👁️ Price View Mode';
+            navModeBadge.style.background = '#64748b'; // Muted Gray
+            posIcon.innerText = '👁️';
+            posTitle.innerText = 'Price Inquiry Active';
+            posDesc.innerHTML = 'Search for items above to view their details and pricing.<br><strong>Pro Tip:</strong> Hover over an item in the search results to see full details!';
+        } else {
+            cartSection.style.display = 'flex';
+            navModeBadge.innerText = '🛒 Transaction Mode';
+            navModeBadge.style.background = '#0ea5e9'; // Primary Blue
+            posIcon.innerText = '🛒';
+            posTitle.innerText = 'System Ready';
+            posDesc.innerHTML = 'Search for items above to add them to the current order.<br><strong>Pro Tip:</strong> Hover over an item in the search results to see full details!';
+        }
+    }
+
+    // SWITCH BACK TO LANDING PAGE
+    function switchMode() {
+        document.getElementById('landingScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
 
     function toNum(val) {
         if (!val) return 0;
@@ -407,6 +462,13 @@
                 
                 const div = document.createElement('div');
                 div.className = 'result-item';
+                
+                // CONDITIONAL BUTTON: Only render the ADD button if mode is transaction
+                let actionButton = '';
+                if (currentMode === 'transaction') {
+                    actionButton = `<button class="btn btn-primary" style="padding: 8px 18px;" onclick="openSelection(${actualIndex})">+ Add</button>`;
+                }
+
                 div.innerHTML = `
                     <div class="item-info">
                         <div class="item-title">${item.generic} <span class="badge">${item.dosage || 'N/A'}</span></div>
@@ -442,7 +504,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary" style="padding: 8px 18px;" onclick="openSelection(${actualIndex})">+ Add</button>
+                    ${actionButton}
                 `;
                 resultsContainer.appendChild(div);
             });
@@ -512,6 +574,8 @@
     /* ================= ACTIONS ================= */
 
     function openSelection(index) {
+        if(currentMode !== 'transaction') return; // Double check safety
+        
         const item = db[index];
         pendingItem = item;
         
@@ -672,7 +736,7 @@
         } 
     }
 
-    // Initial Load
+    // Initial Load for Database Name
     let savedFileName = localStorage.getItem('pharma_v6_filename');
     if (savedFileName) {
         document.getElementById('fileStatus').innerHTML = `📄 ${savedFileName}`;
