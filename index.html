@@ -180,10 +180,10 @@
         .btn-danger { background: #fef2f2; color: var(--danger); }
         .btn-danger:hover { background: var(--danger); color: white; }
         
-        select, input[type="number"], input[type="file"] {
+        select, input[type="number"], input[type="file"], input[type="text"] {
             padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;
         }
-        select:focus, input[type="number"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+        select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
 
         /* Modals */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
@@ -198,6 +198,30 @@
         td { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 500;}
         tr:hover td { background: var(--bg); }
 
+        /* Edit Input Styles */
+        .edit-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+            transition: 0.2s;
+            border-radius: 6px;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+            background: var(--bg);
+        }
+
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 14px 28px; border-radius: 50px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; }
         .toast.show { opacity: 1; bottom: 50px; }
 
@@ -211,21 +235,18 @@
 </head>
 <body onclick="closeSearchPopout(event)">
 
-<!-- 🌟 LANDING SCREEN 🌟 -->
 <div id="landingScreen" class="landing-screen">
     <div class="landing-content">
         <h1 class="landing-title">💊 ProPharma Premium</h1>
         <p class="landing-subtitle">Select your operating mode to proceed</p>
         
         <div class="mode-cards">
-            <!-- Price View Mode -->
             <div class="mode-card" onclick="selectMode('view')">
                 <span class="icon">👁️</span>
                 <h3>Price View Mode</h3>
                 <p>Search the inventory and check pricing securely without opening a transaction or cart.</p>
             </div>
             
-            <!-- Transaction Mode -->
             <div class="mode-card" onclick="selectMode('transaction')">
                 <span class="icon">🛒</span>
                 <h3>Transaction Mode</h3>
@@ -235,7 +256,6 @@
     </div>
 </div>
 
-<!-- TOAST & MODALS -->
 <div id="toast" class="toast">✔️ Added to Cart successfully</div>
 
 <div class="modal-overlay" id="priceModal">
@@ -272,6 +292,7 @@
                         <th>SRP</th>
                         <th>Gov Price</th>
                         <th>Principal</th>
+                        <th style="text-align: center;">Action</th>
                     </tr>
                 </thead>
                 <tbody id="fullInventoryBody"></tbody>
@@ -280,7 +301,6 @@
     </div>
 </div>
 
-<!-- 🌟 MAIN APPLICATION SYSTEM 🌟 -->
 <div id="mainApp">
     <div class="navbar">
         <div style="display: flex; align-items: center; gap: 20px;">
@@ -616,7 +636,7 @@
         
         closeModal('priceModal');
         updateCart();
-        showToast();
+        showToast("✔️ Added to Cart successfully");
     }
 
     function closeModal(id) { 
@@ -636,8 +656,9 @@
         }
     }
 
-    function showToast() {
+    function showToast(msg) {
         const t = document.getElementById('toast');
+        t.innerText = msg;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2000);
     }
@@ -647,29 +668,85 @@
         window.print();
     }
 
-    /* ================= INVENTORY MODAL ================= */
+    /* ================= INVENTORY MODAL (WITH INLINE EDITING) ================= */
+    
+    function getRowHTML(item, index, isEditing) {
+        if (isEditing) {
+            return `
+                <td><input type="text" class="edit-input" id="edit-gen-${index}" value="${item.generic || ''}"></td>
+                <td><input type="text" class="edit-input" id="edit-brd-${index}" value="${item.brand || ''}"></td>
+                <td><input type="text" class="edit-input" id="edit-dos-${index}" value="${item.dosage || ''}"></td>
+                <td><input type="number" step="0.01" class="edit-input" id="edit-srp-${index}" value="${toNum(item.srp)}"></td>
+                <td><input type="number" step="0.01" class="edit-input" id="edit-gov-${index}" value="${toNum(item.gov)}"></td>
+                <td><input type="text" class="edit-input" id="edit-prn-${index}" value="${item.principal || ''}"></td>
+                <td style="text-align: center;">
+                    <button class="action-btn" title="Save Changes" onclick="saveInventoryItem(${index})">💾</button>
+                    <button class="action-btn" title="Cancel" onclick="cancelEdit(${index})">❌</button>
+                </td>
+            `;
+        } else {
+            return `
+                <td style="font-weight:700; color: var(--primary);">${item.generic || '-'}</td>
+                <td>${item.brand || '-'}</td>
+                <td><span class="badge">${item.dosage || '-'}</span></td>
+                <td style="font-weight: 600;">₱${toNum(item.srp).toLocaleString()}</td>
+                <td style="font-weight: 600; color: var(--success);">₱${toNum(item.gov).toLocaleString()}</td>
+                <td style="font-size: 0.9rem;">${item.principal || '-'}</td>
+                <td style="text-align: center;">
+                    <button class="action-btn" title="Edit Row" onclick="editInventoryItem(${index})">✏️</button>
+                </td>
+            `;
+        }
+    }
+
     function openInventoryModal() {
         const tbody = document.getElementById('fullInventoryBody');
         tbody.innerHTML = '';
         
         if(db.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">No data found. Please import an Excel file.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">No data found. Please import an Excel file.</td></tr>';
         } else {
             // Render first 500
-            db.slice(0, 500).forEach(item => {
+            db.slice(0, 500).forEach((item, index) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight:700; color: var(--primary);">${item.generic}</td>
-                    <td>${item.brand || '-'}</td>
-                    <td><span class="badge">${item.dosage || '-'}</span></td>
-                    <td style="font-weight: 600;">₱${toNum(item.srp).toLocaleString()}</td>
-                    <td style="font-weight: 600; color: var(--success);">₱${toNum(item.gov).toLocaleString()}</td>
-                    <td style="font-size: 0.9rem;">${item.principal || '-'}</td>
-                `;
+                tr.id = `inv-row-${index}`;
+                tr.innerHTML = getRowHTML(item, index, false);
                 tbody.appendChild(tr);
             });
         }
         document.getElementById('inventoryModal').style.display = 'flex';
+    }
+
+    function editInventoryItem(index) {
+        const tr = document.getElementById(`inv-row-${index}`);
+        tr.innerHTML = getRowHTML(db[index], index, true);
+    }
+
+    function cancelEdit(index) {
+        const tr = document.getElementById(`inv-row-${index}`);
+        tr.innerHTML = getRowHTML(db[index], index, false);
+    }
+
+    function saveInventoryItem(index) {
+        // Update the array object
+        db[index].generic = document.getElementById(`edit-gen-${index}`).value;
+        db[index].brand = document.getElementById(`edit-brd-${index}`).value;
+        db[index].dosage = document.getElementById(`edit-dos-${index}`).value;
+        db[index].srp = document.getElementById(`edit-srp-${index}`).value;
+        db[index].gov = document.getElementById(`edit-gov-${index}`).value;
+        db[index].principal = document.getElementById(`edit-prn-${index}`).value;
+
+        // Save to local storage cache
+        localStorage.setItem('pharma_v6_db', JSON.stringify(db));
+
+        // Re-render the row back to view mode
+        const tr = document.getElementById(`inv-row-${index}`);
+        tr.innerHTML = getRowHTML(db[index], index, false);
+        
+        showToast("✔️ Item updated successfully!");
+        
+        // Update active cart items dynamically if needed (Optional: to apply changes to cart as well)
+        // updateCart(); 
     }
 
     /* ================= EXCEL IMPORT ================= */
