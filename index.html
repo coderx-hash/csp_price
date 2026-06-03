@@ -100,10 +100,10 @@
         .pos-section { flex: 2; display: flex; flex-direction: column; position: relative; transition: 0.3s; }
 
         /* Search Bar & Popout */
-        .search-wrapper { position: relative; z-index: 50; }
+        .search-wrapper { position: relative; z-index: 50; width: 100%; }
         .main-search-input {
             width: 100%; 
-            padding: 20px 25px 20px 65px; /* Updated Left Padding from 55px to 65px to prevent overlap */
+            padding: 20px 25px 20px 70px !important; /* Force padding left to avoid magnifying glass */
             font-size: 1.15rem;
             font-family: 'Plus Jakarta Sans', sans-serif; 
             border: 2px solid transparent;
@@ -118,12 +118,13 @@
         .main-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-light), var(--shadow-md); }
         .search-icon { 
             position: absolute; 
-            left: 25px; /* Shifted right */
+            left: 25px; /* Stay fixed on the left */
             top: 50%; 
             transform: translateY(-50%); 
             font-size: 1.3rem; 
             color: var(--text-muted);
             pointer-events: none; /* Crucial Fix: Allows clicks to pass through to the input */
+            z-index: 2;
         }
 
         .search-popout {
@@ -252,21 +253,18 @@
 </head>
 <body onclick="closeSearchPopout(event)">
 
-<!-- 🌟 LANDING SCREEN 🌟 -->
 <div id="landingScreen" class="landing-screen">
     <div class="landing-content">
         <h1 class="landing-title">💊 ProPharma Premium</h1>
         <p class="landing-subtitle">Select your operating mode to proceed</p>
         
         <div class="mode-cards">
-            <!-- Price View Mode -->
             <div class="mode-card" onclick="selectMode('view')">
                 <span class="icon">👁️</span>
                 <h3>Price View Mode</h3>
                 <p>Search the inventory and check pricing securely without opening a transaction or cart.</p>
             </div>
             
-            <!-- Transaction Mode -->
             <div class="mode-card" onclick="selectMode('transaction')">
                 <span class="icon">🛒</span>
                 <h3>Transaction Mode</h3>
@@ -276,7 +274,6 @@
     </div>
 </div>
 
-<!-- TOAST & MODALS -->
 <div id="toast" class="toast">✔️ Added to Cart successfully</div>
 
 <div class="modal-overlay" id="priceModal">
@@ -305,10 +302,9 @@
                 <button class="btn btn-outline" onclick="closeModal('inventoryModal')">✕ Close Database</button>
             </div>
             
-            <!-- INVENTORY SEARCH BAR -->
-            <div class="search-wrapper" style="width: 100%;">
-                <span class="search-icon" style="left: 20px;">🔍</span>
-                <input type="text" id="inventorySearchInput" class="main-search-input" style="padding-left: 60px; font-size: 1rem; padding-top: 15px; padding-bottom: 15px;" placeholder="Filter database by generic, brand, dosage, or principal..." oninput="filterInventory(this.value)">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="inventorySearchInput" class="main-search-input" style="font-size: 1rem; padding-top: 15px !important; padding-bottom: 15px !important;" placeholder="Filter database by generic, brand, dosage, or principal..." oninput="filterInventory(this.value)">
             </div>
         </div>
         <div class="table-wrap">
@@ -330,7 +326,6 @@
     </div>
 </div>
 
-<!-- 🌟 MAIN APPLICATION SYSTEM 🌟 -->
 <div id="mainApp">
     <div class="navbar">
         <div style="display: flex; align-items: center; gap: 20px;">
